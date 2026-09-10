@@ -315,22 +315,16 @@ def handle_buy(call):
     coins = int(parts[1])
     stars = int(parts[2])
     
-    # ВАЖНО: Замените на реальный токен платежа Telegram
-    provider_token = os.getenv('PROVIDER_TOKEN', '')
-    
-    if not provider_token:
-        bot.answer_callback_query(call.id, "❌ Платежи временно недоступны.", show_alert=True)
-        return
-    
+    # Для Telegram Stars provider_token должен быть пустым!
     prices = [LabeledPrice(label=f"{coins} монет", amount=stars)]
     bot.send_invoice(
-        call.message.chat.id,
+        chat_id=call.message.chat.id,
         title=f"Пополнение: {coins} 🪙",
         description=f"Покупка {coins} монет за {stars} Telegram Stars (XTR).",
         invoice_payload=f"buy_{coins}",
-        provider_token=provider_token,
-        currency="XTR",
-        prices=prices
+        provider_token="",  # Оставляем пустые кавычки для Telegram Stars
+        currency="XTR",     # Обязательно XTR
+        prices=prices       # amount — это количество звёзд
     )
     bot.answer_callback_query(call.id)
 
