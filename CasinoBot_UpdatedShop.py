@@ -3,9 +3,19 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 import time
 import sqlite3
 import threading
+import os
+from dotenv import load_dotenv
+from flask import Flask
 
-TOKEN = '8924716382:AAEwSTDZ7uipfNGypnj2v8yZGshY_1tvfyI'
+# Загружаем переменные окружения
+load_dotenv()
+
+TOKEN = os.getenv('BOT_TOKEN')
+if not TOKEN:
+    raise ValueError("BOT_TOKEN не найден! Установите переменную окружения.")
+
 bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
 
 DB_NAME = 'casino_data.db'
 GAME_COOLDOWN = 3.5
@@ -422,11 +432,18 @@ def handle_game(call):
     
     bot.send_message(call.message.chat.id, final_text)
 
+@app.route('/')
+def index():
+    return 'Bot is running', 200
+
 if __name__ == '__main__':
     init_db()
     
     broadcaster_thread = threading.Thread(target=auto_broadcaster, daemon=True)
     broadcaster_thread.start()
     
-    print("✅ Бот запущен!")
-    bot.infinity_polling(timeout=20, long_polling_timeout=10)
+    bot_thread = threading.Thread(target=lambda: bot.infinity_polling(timeout=20, long_polling_timeout=10), daemon=True)
+    bot_thread.start()
+    
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
